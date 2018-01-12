@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [ -z "$1" ]
+then
+  echo "CN is required"
+  exit 1
+fi
+
+name=$1
+dir=client-$name
+
+echo Generating client cert for $name
+
+mkdir $dir
+pushd $dir
+openssl genrsa -out key.pem 2048
+openssl req -new -key key.pem -out req.pem -outform PEM -subj "/CN=$name)/O=client/" -nodes
+popd
+pushd ca
+openssl ca -config openssl.cnf -in ../$dir/req.pem -out ../$dir/cert.pem -notext -batch -extensions client_ca_extensions
+popd
+
+# For generating the PKS #12
+#cd ../client
+#openssl pkcs12 -export -out keycert.p12 -in cert.pem -inkey key.pem \
+#    -passout pass:MySecretPassword
