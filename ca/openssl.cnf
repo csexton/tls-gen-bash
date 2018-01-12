@@ -1,7 +1,7 @@
 [ ca ]
-default_ca = testca
+default_ca = defaultca
 
-[ testca ]
+[ defaultca ]
 dir = .
 certificate = $dir/cacert.pem
 database = $dir/index.txt
@@ -13,10 +13,10 @@ default_crl_days = 7
 default_days = 36500
 default_md = sha256
 
-policy = testca_policy
+policy = default_ca_policy
 x509_extensions = certificate_extensions
 
-[ testca_policy ]
+[ default_ca_policy ]
 commonName = supplied
 stateOrProvinceName = optional
 countryName = optional

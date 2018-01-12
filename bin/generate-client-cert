@@ -1,26 +1,47 @@
 #!/bin/bash
 
-if [ -z "$1" ]
+create_p12=false
+
+while :; do
+  case $1 in
+    -p|--pk12)
+      create_p12=true
+      ;;
+    *)
+      break
+  esac
+
+  shift
+done
+
+name="$1"
+dir="client-$name"
+org=${ORGNIZATION:-MyOrg}
+
+if [ -z "$name" ]
 then
-  echo "CN is required"
+  echo "ERROR: Common name is required"
+  echo "USAGE: generate-client-cert <common name>"
   exit 1
 fi
 
-name=$1
-dir=client-$name
-
-echo Generating client cert for $name
+echo "Generating client cert for $name"
 
 mkdir $dir
-pushd $dir
-openssl genrsa -out key.pem 2048
-openssl req -new -key key.pem -out req.pem -outform PEM -subj "/CN=$name)/O=client/" -nodes
-popd
+
+openssl genrsa -out $dir/key.pem 2048
+openssl req -new -key $dir/key.pem -out $dir/req.pem -outform PEM -subj "/CN=$name/O=$org/" -nodes
+
 pushd ca
 openssl ca -config openssl.cnf -in ../$dir/req.pem -out ../$dir/cert.pem -notext -batch -extensions client_ca_extensions
 popd
 
+rm $dir/req.pem
+
 # For generating the PKS #12
-#cd ../client
-#openssl pkcs12 -export -out keycert.p12 -in cert.pem -inkey key.pem \
-#    -passout pass:MySecretPassword
+if [ $create_p12 = true ]
+then
+  openssl pkcs12 -export -out $dir/keycert.p12 -in $dir/cert.pem -inkey $dir/key.pem
+  # Option to add if you want to set the password in the command line
+  # -passout pass:MySecretPassword
+fi
